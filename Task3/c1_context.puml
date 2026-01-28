@@ -1,0 +1,40 @@
+@startuml C1_Context_ToBe
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title C1 Context: PropDevelopment (To-Be)
+
+' --- PERSONS ---
+Person(client, "Потенциальный клиент", "Ищет недвижимость, бронирует, покупает")
+Person(owner, "Собственник", "Живет в ЖК, оплачивает счета, управляет умным домом")
+Person(manager, "Менеджер", "Работает с клиентами и сделками")
+
+' --- INTERNAL SYSTEMS ---
+System(prop_system, "PropDevelopment System", "Комплексная система управления продажами и ЖКХ")
+
+' --- EXTERNAL SYSTEMS ---
+System_Ext(gov_registry, "Гос. регистрация (Росреестр)", "Регистрация сделок с недвижимостью")
+System_Ext(payment_gateway, "Платежная система", "Обработка онлайн-платежей")
+System_Ext(partner_uk, "Управляющая Компания (Партнер)", "Сторонняя УК, обслуживающая некоторые ЖК")
+
+' --- NEW EXTERNAL SYSTEMS (TASK 3) ---
+System_Ext(smart_home_cloud, "Облако 'Умный дом'", "Платформа партнера для управления IoT устройствами")
+System_Ext(iot_intercom, "Умный домофон", "Физическое устройство с камерой и биометрией")
+System_Ext(iot_barrier, "Умный шлагбаум", "Система контроля въезда (LPR)")
+
+' --- RELATIONS ---
+Rel(client, prop_system, "Выбирает и покупает квартиру", "HTTPS")
+Rel(owner, prop_system, "Оплачивает ЖКХ, управляет умным домом", "HTTPS / Mobile App")
+Rel(manager, prop_system, "Администрирует процессы", "HTTPS")
+
+Rel(prop_system, gov_registry, "Регистрирует сделки", "SOAP/SMEV")
+Rel(prop_system, payment_gateway, "Проводит платежи", "REST API")
+Rel(prop_system, partner_uk, "Обменивается данными по ЖКХ", "REST API")
+
+' --- IOT RELATIONS ---
+Rel(owner, iot_intercom, "Открывает лицом/приложением", "Physical / Local Network")
+Rel(iot_intercom, smart_home_cloud, "Отправляет видео/события", "MQTT / HTTPS")
+Rel(iot_barrier, smart_home_cloud, "Проверяет номера авто", "MQTT / HTTPS")
+
+Rel(prop_system, smart_home_cloud, "Управляет правами доступа жильцов", "Secure REST API (mTLS)")
+
+@enduml
