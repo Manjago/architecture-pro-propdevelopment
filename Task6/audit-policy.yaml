@@ -1,23 +1,30 @@
 apiVersion: audit.k8s.io/v1
 kind: Policy
 rules:
-  # Логируем тело запроса для критичных изменений (создание подов, доступ к секретам)
+  # Логируем полное тело запроса и ответа для критичных операций
   - level: RequestResponse
     verbs: ["create", "delete", "update", "patch"]
     resources:
     - group: ""
       resources: ["pods", "secrets", "configmaps", "serviceaccounts"]
     - group: "rbac.authorization.k8s.io"
-      resources: ["roles", "rolebindings"]
+      resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
 
-  # Логируем метаданные для доступа к секретам (кто читал?)
+  # Логируем метаданные для чтения секретов (кто и когда читал)
   - level: Metadata
     verbs: ["get", "list"]
     resources:
     - group: ""
       resources: ["secrets"]
 
-  # Для всего остального логируем только метаданные
+  # Логируем exec в поды (потенциально опасная операция)
+  - level: RequestResponse
+    verbs: ["create"]
+    resources:
+    - group: ""
+      resources: ["pods/exec", "pods/attach"]
+
+  # Для всего остального - только метаданные
   - level: Metadata
     omitStages:
-      - "RequestReceived"
+    - RequestReceived

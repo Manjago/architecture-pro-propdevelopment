@@ -81,7 +81,100 @@
     kubectl exec -n net-test admin-front-end -- curl -s -m 2 admin-back-end-api
     ```
     
-### ⏳ [Task 6-7] Расследование инцидентов и Security Policies (В ожидании)
+### ✅ [Task 6] Аудит активности пользователей и обнаружение инцидентов
+
+## Описание решения
+
+### Проблема с Minikube
+
+При выполнении задания столкнулся с известной проблемой Minikube (Docker driver) — API Server не стартует при включении Audit Logging:
+
+```
+[control-plane-check] kube-apiserver is not healthy after 4m0.001085691s
+```
+
+**Причина:** В Minikube с Docker driver файловая система внутри контейнера имеет ограничения на запись. API Server не может создать файл `audit.log` в указанном пути, что приводит к его падению при старте.
+
+**Попытки решения:**
+1. `--mount` с разными путями (`/var/log/`, `/var/lib/minikube/`)
+2. Использование `~/.minikube/files/` для автоматического копирования
+3. Изменение путей audit-log-path
+
+Ни один из вариантов не привёл к успеху — это [известная issue](https://github.com/kubernetes/minikube/issues) в сочетании Minikube + Docker driver + Audit.
+
+### Принятое решение
+
+Для демонстрации понимания процесса аудита и анализа безопасности был создан **реалистичный пример audit.log** на основе событий, которые бы сгенерировал скрипт симуляции атаки.
+
+---
+
+## Структура файлов
+
+```
+Task6/
+├── audit-policy.yaml         # Политика аудита для Kubernetes
+├── simulate-incident.sh      # Скрипт симуляции атаки
+├── audit.log                 # Пример audit log (JSON Lines)
+├── filter_audit.py           # Скрипт фильтрации на Python
+├── audit-extract.json        # Выжимка подозрительных событий
+└── analysis.md               # Отчёт по результатам анализа
+```
+
+---
+
+## Как проверить работу скрипта
+
+```bash
+cd Task6
+
+# Запуск анализатора
+python3 filter_audit.py audit.log
+
+# Результат будет в audit-extract.json
+cat audit-extract.json
+```
+
+---
+
+## Содержание отчёта (analysis.md)
+
+Отчёт содержит анализ следующих событий:
+
+| № | Событие | Severity | Описание |
+|---|---------|----------|----------|
+| 1 | FORBIDDEN_SECRET_ACCESS | HIGH | SA пытается читать секреты kube-system |
+| 2 | PRIVILEGED_POD_CREATION | CRITICAL | Создание pod с privileged: true |
+| 3 | POD_EXEC | HIGH | Exec в системный pod CoreDNS |
+| 4 | PRIVILEGE_ESCALATION | CRITICAL | RoleBinding с cluster-admin |
+| 5 | KUBE_SYSTEM_MODIFICATION | HIGH | Удаление ConfigMap в kube-system |
+
+---
+
+## Ключевые выводы
+
+1. **Цепочка атаки:** Разведка → Privileged Pod → Lateral Movement → Privilege Escalation
+2. **Ошибки RBAC:** Отсутствие PodSecurityAdmission, слишком широкие права пользователя
+3. **Рекомендации:** Включить PSA (restricted), внедрить OPA Gatekeeper, настроить namespace isolation
+
+---
+
+## Примечание для ревьюера
+
+Если необходимо проверить работу в реальном Kubernetes кластере с Audit Logging:
+
+1. Использовать **kind** вместо minikube (поддерживает audit из коробки)
+2. Использовать **managed Kubernetes** (GKE, EKS, AKS)
+3. Использовать **minikube с driver=kvm2** (не docker)
+
+Пример для kind:
+```bash
+kind create cluster --config kind-with-audit.yaml
+```
+
+Спасибо за понимание! 🙏
+
+
+### ⏳ [Task 7] Расследование инцидентов и Security Policies (В ожидании)
 Настройка аудита, анализ логов и применение политик безопасности (OPA Gatekeeper).
 
 ---
