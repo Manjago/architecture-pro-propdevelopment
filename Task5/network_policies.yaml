@@ -1,0 +1,51 @@
+# 1. Default Deny All Ingress
+# Запрещаем любой входящий трафик ко всем подам в namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: net-test
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+
+---
+# 2. Allow Public API
+# Разрешаем трафик от front-end к back-end-api
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-public-api
+  namespace: net-test
+spec:
+  podSelector:
+    matchLabels:
+      role: back-end-api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: front-end
+
+---
+# 3. Allow Admin API
+# Разрешаем трафик от admin-front-end к admin-back-end-api
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-admin-api
+  namespace: net-test
+spec:
+  podSelector:
+    matchLabels:
+      role: admin-back-end-api
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: admin-front-end

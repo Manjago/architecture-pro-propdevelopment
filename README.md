@@ -51,23 +51,36 @@
     kubectl auth can-i get secrets --as=dev-user --as-group=developers
     ```
 
-### ⏳ [Task 5] Управление трафиком (Network Policies) (В работе)
-Микросегментация трафика между сервисами для изоляции контуров.
+### ✅ [Task 5] Управление трафиком (Network Policies)
+Микросегментация трафика между сервисами для изоляции контуров (Public vs Admin).
+
 *   ⚙️ **Артефакты:**
-    *   `deploy_pods.sh` — скрипт для развертывания тестовых сервисов.
-    *   `network_policies.yaml` — манифесты `NetworkPolicy` для изоляции.
-*   **Для проверки:**
+    *   `deploy_pods.sh` — скрипт для развертывания тестовых сервисов (front-end, back-end, admin).
+    *   `network_policies.yaml` — манифесты `NetworkPolicy` (Default Deny + Allow rules).
+
+*   ⚠️ **Важно для проверки:**
+    Стандартный драйвер Minikube (`bridge`) не поддерживает NetworkPolicy. Для корректной работы требуется CNI плагин (например, Calico).
+    
+    **Запуск кластера с поддержкой Network Policies:**
+    ```bash
+    minikube start --network-plugin=cni --cni=calico --driver=docker
+    ```
+
+*   **Сценарий проверки:**
     ```bash
     ./Task5/deploy_pods.sh
     kubectl apply -f Task5/network_policies.yaml
     
-    # Разрешено (front -> back)
+    # 1. Разрешено (front -> back) -> Должен вернуть HTML
     kubectl exec -n net-test front-end -- curl -s -m 2 back-end-api
     
-    # Запрещено (front -> admin-back)
+    # 2. Запрещено (front -> admin-back) -> Должен быть TIMEOUT (exit code 28)
     kubectl exec -n net-test front-end -- curl -s -m 2 admin-back-end-api
+    
+    # 3. Разрешено (admin-front -> admin-back) -> Должен вернуть HTML
+    kubectl exec -n net-test admin-front-end -- curl -s -m 2 admin-back-end-api
     ```
-
+    
 ### ⏳ [Task 6-7] Расследование инцидентов и Security Policies (В ожидании)
 Настройка аудита, анализ логов и применение политик безопасности (OPA Gatekeeper).
 
