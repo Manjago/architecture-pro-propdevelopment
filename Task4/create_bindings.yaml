@@ -1,0 +1,45 @@
+# 1. Связываем группу developers с ролью view-only (на весь кластер)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dev-view-binding
+subjects:
+- kind: Group
+  name: developers # Группа из сертификата (O=developers)
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: view-only-clusterrole
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# 2. Связываем пользователя audit-user с ролью secret-reader (только в default)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: auditor-secret-binding
+  namespace: default
+subjects:
+- kind: User
+  name: audit-user # Конкретный юзер
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: secret-reader-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# 3. Связываем po-user с админскими правами в default
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: po-admin-binding
+  namespace: default
+subjects:
+- kind: User
+  name: po-user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: namespace-admin-role
+  apiGroup: rbac.authorization.k8s.io

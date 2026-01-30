@@ -31,9 +31,45 @@
 *   📝 **[Требования к интеграции](./Task3/integration_requirements.md)** — описание протоколов (mTLS, OIDC) и мер безопасности.
 *   ℹ️ *Исходный код:* [c1_context.puml](./Task3/c1_context.puml), [c2_container.puml](./Task3/c2_container.puml).
 
-### ⏳ [Task 4-7] Безопасность Kubernetes (В ожидании)
-Техническая реализация защиты кластера.
-*   RBAC, Network Policies, Audit Logging, OPA Gatekeeper.
+### ✅ [Task 4] Защита доступа к кластеру (RBAC)
+Настройка ролевой модели доступа для различных групп пользователей в Kubernetes.
+*   📄 **[Таблица ролей](./Task4/rbac_roles.md)** — описание ролей и полномочий.
+*   ⚙️ **Артефакты:**
+    *   `create_users.sh` — скрипт для генерации сертификатов пользователей.
+    *   `create_roles.yaml` — манифест с `Role` и `ClusterRole`.
+    *   `create_bindings.yaml` — манифест с `RoleBinding` и `ClusterRoleBinding`.
+*   **Для проверки:**
+    ```bash
+    ./Task4/create_users.sh
+    kubectl apply -f Task4/create_roles.yaml
+    kubectl apply -f Task4/create_bindings.yaml
+    
+    # Разрешено
+    kubectl auth can-i list pods --as=dev-user --as-group=developers
+    
+    # Запрещено
+    kubectl auth can-i get secrets --as=dev-user --as-group=developers
+    ```
+
+### ⏳ [Task 5] Управление трафиком (Network Policies) (В работе)
+Микросегментация трафика между сервисами для изоляции контуров.
+*   ⚙️ **Артефакты:**
+    *   `deploy_pods.sh` — скрипт для развертывания тестовых сервисов.
+    *   `network_policies.yaml` — манифесты `NetworkPolicy` для изоляции.
+*   **Для проверки:**
+    ```bash
+    ./Task5/deploy_pods.sh
+    kubectl apply -f Task5/network_policies.yaml
+    
+    # Разрешено (front -> back)
+    kubectl exec -n net-test front-end -- curl -s -m 2 back-end-api
+    
+    # Запрещено (front -> admin-back)
+    kubectl exec -n net-test front-end -- curl -s -m 2 admin-back-end-api
+    ```
+
+### ⏳ [Task 6-7] Расследование инцидентов и Security Policies (В ожидании)
+Настройка аудита, анализ логов и применение политик безопасности (OPA Gatekeeper).
 
 ---
 *Автор: Кирилл Темненков*
