@@ -1,0 +1,30 @@
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  # Логируем полное тело запроса и ответа для критичных операций
+  - level: RequestResponse
+    verbs: ["create", "delete", "update", "patch"]
+    resources:
+    - group: ""
+      resources: ["pods", "secrets", "configmaps", "serviceaccounts"]
+    - group: "rbac.authorization.k8s.io"
+      resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+
+  # Логируем метаданные для чтения секретов (кто и когда читал)
+  - level: Metadata
+    verbs: ["get", "list"]
+    resources:
+    - group: ""
+      resources: ["secrets"]
+
+  # Логируем exec в поды (потенциально опасная операция)
+  - level: RequestResponse
+    verbs: ["create"]
+    resources:
+    - group: ""
+      resources: ["pods/exec", "pods/attach"]
+
+  # Для всего остального - только метаданные
+  - level: Metadata
+    omitStages:
+    - RequestReceived

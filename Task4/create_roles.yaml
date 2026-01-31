@@ -1,0 +1,36 @@
+# 1. ClusterRole для просмотра (View Only)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: view-only-clusterrole
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "configmaps", "nodes", "namespaces", "persistentvolumes"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets", "daemonsets"]
+  verbs: ["get", "list", "watch"]
+
+---
+# 2. Role для чтения секретов (в конкретном namespace)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: secret-reader-role
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+
+---
+# 3. Role для админа неймспейса
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: namespace-admin-role
+rules:
+- apiGroups: ["", "apps", "networking.k8s.io"]
+  resources: ["*"]
+  verbs: ["*"]

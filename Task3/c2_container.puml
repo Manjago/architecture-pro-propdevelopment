@@ -1,0 +1,55 @@
+@startuml C2_Container_ToBe
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C2 Container: PropDevelopment (To-Be)
+
+' --- PERSONS ---
+Person(owner, "Собственник", "Использует мобильное приложение")
+
+' --- EXTERNAL SYSTEMS ---
+System_Ext(smart_home_cloud, "Облако 'Умный дом'", "API партнера (MQTT/REST)")
+System_Ext(payment_gateway, "Платежная система", "Эквайринг")
+
+' --- BOUNDARY: PropDevelopment ---
+System_Boundary(prop_system, "PropDevelopment System") {
+
+    ' --- INFRASTRUCTURE SECURITY ---
+    Container(api_gateway, "API Gateway", "Nginx / Kong", "Единая точка входа, WAF, Rate Limiting, TLS Termination")
+    Container(auth_service, "Auth Service", "Keycloak", "SSO, MFA, Identity Provider")
+
+    ' --- TENANT DOMAIN (ЖКУ) ---
+    Container(tenant_mobile, "Mobile App (ЖКУ)", "iOS / Android", "Приложение для жильцов: счета, заявки, умный дом")
+    
+    Container(tenant_core, "Tenant Core Service", "Kotlin, Spring Boot", "Бизнес-логика услуг ЖКХ и интеграций")
+    ContainerDb(tenant_db, "Tenant DB", "PostgreSQL", "Хранение данных жильцов и настроек")
+
+    ' --- SALES DOMAIN (Для контекста) ---
+    Container(sales_crm, "CRM (Sales)", "Dynamics CRM", "Данные о продажах")
+
+    ' --- INTEGRATION MODULES ---
+    Container(iot_adapter, "IoT Adapter Service", "Go / Java", "Адаптер для интеграции с внешним API Умного дома. Изоляция логики партнера.")
+
+}
+
+' --- RELATIONS ---
+
+' 1. Auth
+Rel(owner, tenant_mobile, "Входит в приложение", "Biometry / Pin")
+Rel(tenant_mobile, api_gateway, "API запросы (HTTPS + JWT)", "TLS 1.3")
+Rel(api_gateway, auth_service, "Валидация токена", "OIDC")
+
+' 2. Business Logic
+Rel(api_gateway, tenant_core, "Проксирование запросов", "gRPC / REST")
+Rel(tenant_core, tenant_db, "CRUD данных", "JDBC")
+
+' 3. Smart Home Integration
+Rel(tenant_core, iot_adapter, "Команда на открытие двери", "gRPC / Kafka")
+Rel(iot_adapter, smart_home_cloud, "API запрос (Open Door)", "mTLS, REST API")
+
+' 4. Payments
+Rel(tenant_core, payment_gateway, "Оплата счетов", "REST API")
+
+' 5. Internal
+Rel(tenant_core, sales_crm, "Получение данных о новом собственнике", "Kafka / REST")
+
+@enduml
