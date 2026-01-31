@@ -174,8 +174,14 @@ kind create cluster --config kind-with-audit.yaml
 Спасибо за понимание! 🙏
 
 
-### ⏳ [Task 7] Расследование инцидентов и Security Policies (В ожидании)
-Настройка аудита, анализ логов и применение политик безопасности (OPA Gatekeeper).
+### ✅ [Task 7] Политики безопасности контейнеров (Pod Security)
+Внедрение стандарта Pod Security Admission (PSA) в режиме `Restricted`.
+*   ⚙️ **Артефакты:**
+    *   `01-create-namespace.yaml` — Namespace с меткой `pod-security...enforce: restricted`.
+    *   `insecure-manifests/` — примеры подов, нарушающих политику (Privileged, Root).
+    *   `secure-manifests/` — пример корректного пода (NonRoot, Seccomp, ReadOnlyFS).
+    *   `verify.sh` — скрипт автоматического тестирования политик.
+*   **Результат:** Кластер автоматически блокирует попытки запуска привилегированных контейнеров.
 
 ---
 *Автор: Кирилл Темненков*

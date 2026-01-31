@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: audit-zone
+  labels:
+    # Включаем строгий режим безопасности (запрещает root, hostPath, privileged)
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: "latest"
+    # Предупреждаем о нарушениях (для аудита)
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: "latest"
